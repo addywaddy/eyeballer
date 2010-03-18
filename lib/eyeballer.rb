@@ -37,8 +37,8 @@ module Eyeballer
           aliased_name = "#{method_name_without_punctuation}_without_eyeball#{punctuation}"
           unless method_defined? aliased_name
             alias_method aliased_name, method_name
-            define_method method_name do
-              result = self.send(aliased_name)
+            define_method method_name do |*args|
+              result = self.send(aliased_name, *args)
               eyeball_executer(method_name)
               result
             end

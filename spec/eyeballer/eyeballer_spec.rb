@@ -21,6 +21,10 @@ class Foo
   def destroy!
     true
   end
+
+  def echo(string)
+    string
+  end
 end
 
 class Job
@@ -44,6 +48,8 @@ class Observer
   observe :foo, :valid? => :process_files
 
   observe :foo, :destroy! => :email_someone
+
+  observe :foo, :echo => :do_something
 
   def do_something
     Job.number_one
@@ -96,5 +102,10 @@ describe Eyeballer do
     foo.should be_valid
     Job.should_receive(:number_five).with(foo)
     foo.destroy!.should be_true
+  end
+
+  it "should cope with methods which take arguments" do
+    Job.should_receive(:number_one)
+    Foo.new.echo("Repeat this text").should == "Repeat this text"
   end
 end
