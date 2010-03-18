@@ -32,10 +32,13 @@ module Eyeballer
         end
 
         self.eyeballed_methods.keys.each do |method_name|
-          unless method_defined? :"#{method_name}_without_eyeball"
-            alias_method :"#{method_name}_without_eyeball", method_name
+          # Pinched from alias_method_chain:
+          method_name_without_punctuation, punctuation = method_name.to_s.sub(/([?!=])$/, ''), $1
+          aliased_name = "#{method_name_without_punctuation}_without_eyeball#{punctuation}"
+          unless method_defined? aliased_name
+            alias_method aliased_name, method_name
             define_method method_name do
-              result = self.send("#{method_name}_without_eyeball")
+              result = self.send(aliased_name)
               eyeball_executer(method_name)
               result
             end

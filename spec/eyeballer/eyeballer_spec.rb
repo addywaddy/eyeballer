@@ -13,12 +13,22 @@ class Foo
   def other_activity
     "Busy again ..."
   end
+
+  def valid?
+    true
+  end
+
+  def destroy!
+    true
+  end
 end
 
 class Job
   def self.number_one;end
   def self.number_two;end
   def self.number_three;end
+  def self.number_four(instance);end
+  def self.number_five(instance);end
 end
 
 class Observer
@@ -30,6 +40,10 @@ class Observer
   observe :foo, :bad_activity => :do_something_entirely_different
 
   observe :foo, :other_activity => :do_something_with_the_instance
+
+  observe :foo, :valid? => :process_files
+
+  observe :foo, :destroy! => :email_someone
 
   def do_something
     Job.number_one
@@ -45,6 +59,14 @@ class Observer
 
   def do_something_with_the_instance(instance)
     instance.greeting = "The Observer says hello too!"
+  end
+
+  def process_files(instance)
+    Job.number_four(instance)
+  end
+
+  def email_someone(instance)
+    Job.number_five(instance)
   end
 end
 
@@ -66,5 +88,13 @@ describe Eyeballer do
     foo.greeting.should be_blank
     foo.other_activity.should == "Busy again ..."
     foo.greeting.should == "The Observer says hello too!"
+  end
+
+  it "should cope with predicates and bang methods" do
+    foo = Foo.new
+    Job.should_receive(:number_four).with(foo)
+    foo.should be_valid
+    Job.should_receive(:number_five).with(foo)
+    foo.destroy!.should be_true
   end
 end
