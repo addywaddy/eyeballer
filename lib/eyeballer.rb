@@ -15,23 +15,35 @@ module Eyeballer
       klass.class_eval do
 
         cattr_accessor :eyeballed_methods
-        self.eyeballed_methods||= {}
-        self.eyeballed_methods.merge!(actions) {|key, oldval, newval| (Array(oldval).flatten << newval).uniq}
+        self.eyeballed_methods ||= Hash.new { |hash, key| hash[key] = {} }
+        self.eyeballed_methods[observer_klass].merge!(actions) do |key, oldval, newval|
+          (Array(oldval).flatten << newval).uniq
+        end
+
+        unless method_defined? :observer_klasses
+          def observer_klasses(name)
+            self.class.eyeballed_methods.map do |observer_klass, hooks|
+              observer_klass if hooks.keys.detect(name)
+            end.compact
+          end
+        end
 
         unless method_defined? :eyeball_executer
           define_method :eyeball_executer do |name|
-            observer_klass_instance = observer_klass.new
-            Array(self.class.eyeballed_methods[name]).each do |hook|
-              if observer_klass_instance.method(hook).arity > 0
-                observer_klass_instance.send(hook, self)
-              else
-                observer_klass_instance.send(hook)
+            observer_klasses(name).each do |observer_klass|
+              observer_klass_instance = observer_klass.new
+              Array(self.class.eyeballed_methods[observer_klass][name]).each do |hook|
+                if observer_klass_instance.method(hook).arity > 0
+                  observer_klass_instance.send(hook, self)
+                else
+                  observer_klass_instance.send(hook)
+                end
               end
             end
           end
         end
 
-        self.eyeballed_methods.keys.each do |method_name|
+        actions.keys.each do |method_name|
           # Pinched from alias_method_chain:
           method_name_without_punctuation, punctuation = method_name.to_s.sub(/([?!=])$/, ''), $1
           aliased_name = "#{method_name_without_punctuation}_without_eyeball#{punctuation}"

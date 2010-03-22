@@ -29,6 +29,7 @@ end
 
 class Job
   def self.number_one;end
+  def self.more_than_number_one;end
   def self.number_two;end
   def self.number_three;end
   def self.number_four(instance);end
@@ -76,7 +77,6 @@ class Observer
   end
 end
 
-
 describe Eyeballer do
   it "should do something" do
     Job.should_receive(:number_one)
@@ -107,5 +107,24 @@ describe Eyeballer do
   it "should cope with methods which take arguments" do
     Job.should_receive(:number_one)
     Foo.new.echo("Repeat this text").should == "Repeat this text"
+  end
+end
+
+class SecondObserver
+  include Eyeballer
+
+  observe :foo, :activity => :do_something_more
+
+  def do_something_more
+    Job.more_than_number_one
+  end
+end
+
+describe SecondObserver do
+  it "should do something more" do
+    Job.should_receive(:number_one)
+    Job.should_receive(:number_two)
+    Job.should_receive(:more_than_number_one)
+    Foo.new.activity.should == "Busy busy ..."
   end
 end
