@@ -23,7 +23,7 @@ module Eyeballer
         unless method_defined? :observer_klasses
           def observer_klasses(name)
             self.class.eyeballed_methods.map do |observer_klass, hooks|
-              observer_klass if hooks.keys.detect(name)
+              observer_klass if hooks.keys.detect { |key| key == name }
             end.compact
           end
         end
