@@ -1,4 +1,4 @@
-# <font style="font-size: 2em; position: relative; top: .15em" face="Webdings">N</font> Eyeballer
+# Eyeballer
 
 A simple observer written in Ruby.
 
